@@ -167,7 +167,7 @@ class LogViewer(QTextEdit):
     def __init__(self):
         super().__init__()
         self.setReadOnly(True)
-        self.setFont(QFont("Consolas", 9))
+        self.setFont(QFont("Menlo", 9))
         self.setStyleSheet("QTextEdit { background-color: #1e1e1e; color: #d4d4d4; border: 1px solid #3e3e3e; }")
 
     def append_log(self, log_type: str, text: str):
@@ -817,7 +817,8 @@ class MainWindow(QMainWindow):
                 close_btn = msg_box.addButton("Close", QMessageBox.ButtonRole.AcceptRole)
                 next_btn = None
             else:
-                msg_box.setText(f"✓ Step completed successfully!\n\n{step_name}\n\nPlease re-enter DFU mode before next step.")
+                msg_box.setText(
+                    f"✓ Step completed successfully!\n\n{step_name}\n\nPlease re-enter DFU mode before next step.")
                 # Success: Next Step | Close
                 next_btn = msg_box.addButton("Next Step", QMessageBox.ButtonRole.AcceptRole)
                 close_btn = msg_box.addButton("Close", QMessageBox.ButtonRole.RejectRole)
