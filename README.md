@@ -1,6 +1,8 @@
 # Turdus M3rula GUI
 
 A PyQt6-based graphical interface for [turdus merula](https://sep.lol), enabling iOS/iPadOS downgrades on A9-A10X devices without compatible SEP firmware requirements.
+<img width="986" height="714" alt="image" src="https://github.com/user-attachments/assets/8414be48-926c-4ba6-bbed-274503733ea8" />
+
 
 ## Overview
 
