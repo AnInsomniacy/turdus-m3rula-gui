@@ -20,7 +20,14 @@ from PyQt6.QtWidgets import (
 
 
 class Config:
-    ROOT = Path(__file__).parent.absolute()
+    # Support for PyInstaller frozen environment
+    if getattr(sys, 'frozen', False):
+        # Running in a bundle (PyInstaller)
+        ROOT = Path(sys._MEIPASS)
+    else:
+        # Running in normal Python environment
+        ROOT = Path(__file__).parent.absolute()
+
     RAIN = ROOT / "turdusra1n"
     MERULA = ROOT / "turdus_merula"
 
