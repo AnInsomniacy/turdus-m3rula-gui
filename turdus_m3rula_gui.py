@@ -195,26 +195,27 @@ class LogViewer(QTextEdit):
 
 class StepButton(QPushButton):
     def __init__(self, step_num: int, name: str):
-        super().__init__(f"○ {step_num}. {name}")
+        super().__init__(f"⚪ {step_num}. {name}")
         self.step_num = step_num
         self.name = name
         self.setMinimumHeight(26)
+        self.setStyleSheet("text-align: left; padding-left: 8px;")
         self.is_next = False
 
     def update_status(self, status: int, is_next: bool = False):
         icons = {
-            StepStatus.PENDING: "○",
-            StepStatus.RUNNING: "⏸",
-            StepStatus.SUCCESS: "✓",
-            StepStatus.FAILED: "✗"
+            StepStatus.PENDING: "⚪",
+            StepStatus.RUNNING: "⏳",
+            StepStatus.SUCCESS: "✅",
+            StepStatus.FAILED: "❌"
         }
         self.is_next = is_next
 
-        # Use arrow for next step instead of circle
+        # Use play button for ready step
         if is_next and status == StepStatus.PENDING:
-            icon = "→"
+            icon = "▶️"
         else:
-            icon = icons.get(status, "○")
+            icon = icons.get(status, "⚪")
 
         self.setText(f"{icon} {self.step_num}. {self.name}")
 
@@ -595,9 +596,7 @@ class MainWindow(QMainWindow):
         if not self.state.root_dir:
             return
 
-        # Find the first pending step to mark as next
-        next_step_index = -1
-
+        # Detect completed steps from files
         for i, step in enumerate(self.step_manager.steps):
             if self.current_mode == "teth":
                 if self.state.chip == "A9":
@@ -624,13 +623,20 @@ class MainWindow(QMainWindow):
                     if i == 0 and (self.state.root_dir / "restore_done").exists():
                         step.status = StepStatus.SUCCESS
 
-            # Find first pending step
-            if next_step_index == -1 and step.status == StepStatus.PENDING:
-                next_step_index = i
+        # Find next ready step: PENDING with all previous steps SUCCESS
+        next_step_index = -1
+        for i, step in enumerate(self.step_manager.steps):
+            if step.status == StepStatus.PENDING:
+                if i == 0 or all(self.step_manager.steps[j].status == StepStatus.SUCCESS for j in range(i)):
+                    next_step_index = i
+                    break
 
-            if hasattr(self, 'step_buttons') and i < len(self.step_buttons):
-                is_next = (i == next_step_index)
-                self.step_buttons[i].update_status(step.status, is_next)
+        # Update all buttons
+        if hasattr(self, 'step_buttons'):
+            for i, btn in enumerate(self.step_buttons):
+                if i < len(self.step_buttons):
+                    is_next = (i == next_step_index)
+                    btn.update_status(self.step_manager.steps[i].status, is_next)
 
         self.update_progress()
 
@@ -907,14 +913,16 @@ class MainWindow(QMainWindow):
         self.log_system(f"Process {status} (code: {exit_code})")
 
     def on_step_changed(self, index: int, status: int):
-        # Find the next pending step
+        # Find next ready step: PENDING with all previous steps SUCCESS
         next_step_index = -1
         for i, step in enumerate(self.step_manager.steps):
             if step.status == StepStatus.PENDING:
-                next_step_index = i
-                break
+                # Check if all previous steps are successful
+                if i == 0 or all(self.step_manager.steps[j].status == StepStatus.SUCCESS for j in range(i)):
+                    next_step_index = i
+                    break
 
-        # Update all step buttons to show which is next
+        # Update all step buttons
         for i, btn in enumerate(self.step_buttons):
             is_next = (i == next_step_index)
             btn.update_status(self.step_manager.steps[i].status, is_next)
