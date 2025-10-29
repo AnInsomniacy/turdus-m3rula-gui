@@ -27,6 +27,7 @@
   },
   "build": {
     "appId": "com.example.turdusm3rula",
+    "directories": { "buildResources": "resources" },
     "asar": true,
     "asarUnpack": [
       "bin/**"
@@ -44,16 +45,14 @@
         "to": "bin"
       }
     ],
+    "icon": "../logo.png",
     "mac": {
-      "target": [
-        "dmg"
-      ]
+      "icon": "../logo.png",
+      "target": ["dmg"]
     },
     "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ]
+      "icon": "../logo.png",
+      "target": ["AppImage", "deb"]
     }
   }
 }
