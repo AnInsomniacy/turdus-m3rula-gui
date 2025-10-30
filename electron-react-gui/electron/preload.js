@@ -18,5 +18,9 @@ contextBridge.exposeInMainWorld('api', {
   onStarted: (cb) => ipcRenderer.on('cli:started', (_, m) => cb(m)),
   onLog: (cb) => ipcRenderer.on('cli:log', (_, m) => cb(m)),
   onExit: (cb) => ipcRenderer.on('cli:exit', (_, m) => cb(m)),
-  onceExit: (cb) => ipcRenderer.once('cli:exit', (_, m) => cb(m))
+  onceExit: (cb) => ipcRenderer.once('cli:exit', (_, m) => cb(m)),
+  windowMinimize: () => ipcRenderer.invoke('window:minimize'),
+  windowMaximize: () => ipcRenderer.invoke('window:maximize'),
+  windowClose: () => ipcRenderer.invoke('window:close'),
+  windowIsMaximized: () => ipcRenderer.invoke('window:isMaximized')
 })

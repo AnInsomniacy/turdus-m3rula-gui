@@ -140,6 +140,7 @@ const App = () => {
   const [binMerula, setBinMerula] = useState('')
   const [binRa1n, setBinRa1n] = useState('')
   const [files, setFiles] = useState([])
+  const [isMaximized, setIsMaximized] = useState(false)
   const { lines, clear } = useLog()
   const logRef = useRef(null)
 
@@ -147,7 +148,11 @@ const App = () => {
 
   useEffect(() => { window.api.onStarted(() => setRunning(true)); window.api.onExit(() => setRunning(false)) }, [])
   useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight }, [lines])
-  useEffect(() => { window.api.which('turdus_merula').then(setBinMerula); window.api.which('turdusra1n').then(setBinRa1n) }, [])
+  useEffect(() => { window.api.which('turdus_merula').then(setBinMerula); window.api.which('turdusra1n').then(setBinRa1n); window.api.windowIsMaximized().then(setIsMaximized) }, [])
+
+  const handleMinimize = () => window.api.windowMinimize()
+  const handleMaximize = async () => { await window.api.windowMaximize(); setIsMaximized(await window.api.windowIsMaximized()) }
+  const handleClose = () => window.api.windowClose()
 
   const refreshFiles = async () => { if (!projectDir) return; const list = await window.api.list(projectDir); if (Array.isArray(list)) setFiles(list) }
   useEffect(() => { refreshFiles() }, [projectDir])
@@ -330,7 +335,7 @@ const App = () => {
         <div className="absolute bottom-0 left-1/3 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl animate-blob-slow"></div>
       </div>
 
-      <header className="relative z-20 px-4 py-3 bg-black/40 border-b border-purple-500/30 backdrop-blur-xl flex items-center gap-4 shrink-0">
+      <header className="relative z-20 px-4 py-3 bg-black/40 border-b border-purple-500/30 backdrop-blur-xl flex items-center gap-4 shrink-0" style={{ WebkitAppRegion: 'drag' }}>
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/50">
             <span className="text-lg font-black">T</span>
@@ -339,10 +344,30 @@ const App = () => {
           <Badge color="purple">Electron</Badge>
         </div>
         <div className="flex-1"></div>
-        <div className="flex gap-2">
+        <div className="flex gap-2" style={{ WebkitAppRegion: 'no-drag' }}>
           <Button size="sm" onClick={newProject} variant="solid" color="purple">New</Button>
           <Button size="sm" onClick={openProject} variant="outline" color="purple">Open</Button>
           <Button size="sm" onClick={saveProject} color="purple">Save</Button>
+        </div>
+        <div className="flex gap-1 ml-2" style={{ WebkitAppRegion: 'no-drag' }}>
+          <button onClick={handleMinimize} className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all duration-200 active:scale-95">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12" strokeWidth="2" strokeLinecap="round"/></svg>
+          </button>
+          <button onClick={handleMaximize} className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all duration-200 active:scale-95">
+            {isMaximized ? (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                <rect x="8" y="4" width="11" height="11" rx="1"/>
+                <path d="M5 8h3v11h11v3H5z" fill="currentColor" opacity="0.4"/>
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                <rect x="5" y="5" width="14" height="14" rx="1"/>
+              </svg>
+            )}
+          </button>
+          <button onClick={handleClose} className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 hover:border-red-500/50 transition-all duration-200 active:scale-95">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18" strokeWidth="2" strokeLinecap="round"/><line x1="18" y1="6" x2="6" y2="18" strokeWidth="2" strokeLinecap="round"/></svg>
+          </button>
         </div>
       </header>
 

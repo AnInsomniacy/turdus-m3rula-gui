@@ -28,6 +28,9 @@ const createWindow = () => {
   win = new BrowserWindow({
     width: 980,
     height: 700,
+    minWidth: 800,
+    minHeight: 600,
+    frame: false,
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
@@ -283,4 +286,29 @@ ipcMain.handle('blob:extractGen', async (_, file) => {
   } catch (e) {
     return 'UNKNOWN'
   }
+})
+
+ipcMain.handle('window:minimize', async () => {
+  if (win) win.minimize()
+  return { ok: true }
+})
+
+ipcMain.handle('window:maximize', async () => {
+  if (win) {
+    if (win.isMaximized()) {
+      win.unmaximize()
+    } else {
+      win.maximize()
+    }
+  }
+  return { ok: true }
+})
+
+ipcMain.handle('window:close', async () => {
+  if (win) win.close()
+  return { ok: true }
+})
+
+ipcMain.handle('window:isMaximized', async () => {
+  return win ? win.isMaximized() : false
 })
