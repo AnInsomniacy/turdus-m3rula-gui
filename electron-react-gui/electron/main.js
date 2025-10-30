@@ -1,4 +1,3 @@
-'use strict'
 const { app, BrowserWindow, ipcMain, dialog } = require('electron')
 const path = require('path')
 const fs = require('fs')
@@ -8,7 +7,6 @@ let win
 let child
 
 const isDev = !!process.env.VITE_DEV_SERVER_URL
-const resolveHtmlPath = () => isDev ? process.env.VITE_DEV_SERVER_URL : `file://${path.join(__dirname, '..', 'dist', 'index.html')}`
 
 const resolveBin = (name) => {
   const candidates = [
@@ -39,8 +37,7 @@ const createWindow = () => {
   if (isDev) {
     win.loadURL(process.env.VITE_DEV_SERVER_URL)
   } else {
-    const p = path.join(__dirname, '..', 'dist', 'index.html')
-    win.loadFile(p)
+    win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'))
   }
 }
 
@@ -132,24 +129,57 @@ ipcMain.handle('cli:run', async (_, payload) => {
   const env = Object.assign({}, process.env, (payload && payload.env) || {})
   const bin = resolveBin(name)
   if (!bin) return { error: 'binary_not_found' }
+
   try {
-    child = spawn(bin, args, { cwd, env })
+    child = spawn(bin, args, {
+      cwd,
+      env,
+      stdio: ['pipe', 'pipe', 'pipe']
+    })
+
+    if (!child || !child.pid) {
+      child = null
+      return { error: 'spawn_failed' }
+    }
+
+    const sendMessage = (channel, data) => {
+      if (win && !win.isDestroyed() && win.webContents) {
+        win.webContents.send(channel, data)
+      }
+    }
+
+    sendMessage('cli:started', { pid: child.pid, bin, args })
+
+    child.stdout.setEncoding('utf8')
+    child.stderr.setEncoding('utf8')
+
+    child.stdout.on('data', (data) => {
+      sendMessage('cli:log', data)
+    })
+
+    child.stderr.on('data', (data) => {
+      sendMessage('cli:log', data)
+    })
+
+    child.on('error', (err) => {
+      sendMessage('cli:log', `[error] ${err.message}\n`)
+      child = null
+    })
+
+    child.on('close', (code, signal) => {
+      sendMessage('cli:exit', { code, signal })
+      child = null
+    })
+
+    return { ok: true, pid: child.pid }
   } catch (e) {
     child = null
     return { error: String(e) }
   }
-  win.webContents.send('cli:started', { pid: child.pid, bin, args })
-  child.stdout.on('data', (d) => win.webContents.send('cli:log', d.toString()))
-  child.stderr.on('data', (d) => win.webContents.send('cli:log', d.toString()))
-  child.on('close', (code, signal) => {
-    win.webContents.send('cli:exit', { code, signal })
-    child = null
-  })
-  return { ok: true, pid: child.pid }
 })
 
 ipcMain.handle('cli:write', async (_, data) => {
-  if (!child || !child.stdin.writable) return { error: 'not_running' }
+  if (!child || !child.stdin || !child.stdin.writable) return { error: 'not_running' }
   try {
     child.stdin.write(data)
     return { ok: true }
@@ -166,8 +196,10 @@ ipcMain.handle('cli:kill', async () => {
     } else {
       process.kill(child.pid, 'SIGTERM')
     }
+    child = null
     return { ok: true }
   } catch (e) {
+    child = null
     return { error: String(e) }
   }
 })
