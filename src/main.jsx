@@ -33,6 +33,7 @@ const App = () => {
     const [confirmOpen, setConfirmOpen] = useState(false)
     const [initModalOpen, setInitModalOpen] = useState(true)
     const [createOpen, setCreateOpen] = useState(false)
+    const [aboutOpen, setAboutOpen] = useState(false)
     const [confirmCfg, setConfirmCfg] = useState({title: '', body: '', buttons: [], error: false, nextStep: -1})
     const [createName, setCreateName] = useState('')
     const [createChip, setCreateChip] = useState('A9')
@@ -455,6 +456,8 @@ const App = () => {
     const pct = steps.length ? Math.floor((completed / steps.length) * 100) : 0
     const allCompleted = completed === steps.length && steps.length > 0
 
+    const lineCount = lines.length > 0 ? lines.join('').split('\n').length : 0
+
     const chipDisplay = chip === 'A9' ? 'A9(X)' : 'A10(X)'
     const modeDisplay = mode === 'teth' ? 'Tethered' : 'Untethered'
 
@@ -479,7 +482,7 @@ const App = () => {
             <header className="relative z-20 px-4 py-3 bg-slate-900/80 border-b border-cyan-500/20 backdrop-blur-xl flex items-center gap-4 shrink-0" style={{WebkitAppRegion: 'drag'}}>
                 <div className="flex items-center gap-2">
                     <img src="./logo.png" alt="Logo" className="w-8 h-8 rounded-lg shadow-lg shadow-cyan-500/50"/>
-                    <h1 className="text-xl font-black text-cyan-400">Turdus M3rula</h1>
+                    <h1 className="text-xl font-black text-cyan-400">Turdus M3rula GUI</h1>
                     <Badge color="cyan">iOS/iPadOS Downgrade</Badge>
                 </div>
                 <div className="flex-1"></div>
@@ -487,7 +490,16 @@ const App = () => {
                     <Button size="sm" onClick={newProject} variant="solid" color="cyan">New</Button>
                     <Button size="sm" onClick={openProject} variant="outline" color="cyan">Open</Button>
                 </div>
-                <div className="flex gap-1 ml-2" style={{WebkitAppRegion: 'no-drag'}}>
+                <div className="flex gap-2 ml-2" style={{WebkitAppRegion: 'no-drag'}}>
+                    <button onClick={() => setAboutOpen(true)} className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-cyan-600 border border-cyan-500/30 hover:border-cyan-500 transition-all duration-200 group">
+                        <svg className="w-5 h-5 text-cyan-400 group-hover:text-white transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                            <circle cx="12" cy="17" r="0.5" fill="currentColor"/>
+                        </svg>
+                    </button>
+                </div>
+                <div className="flex gap-1 ml-1" style={{WebkitAppRegion: 'no-drag'}}>
                     <button onClick={handleMinimize} className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all duration-200">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <line x1="5" y1="12" x2="19" y2="12" strokeWidth="2" strokeLinecap="round"/>
@@ -620,13 +632,17 @@ const App = () => {
                                     <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-pulse"></div>
                                     <h3 className="text-xs font-bold text-cyan-400">CONSOLE OUTPUT</h3>
                                 </div>
-                                <span className="text-xs text-slate-500">{lines.length} lines</span>
+                                <span className="text-xs text-slate-500">{lineCount} lines</span>
                             </div>
                             <div ref={logRef} className="flex-1 p-3 font-mono text-xs whitespace-pre-wrap overflow-y-auto">
                                 {lines.length === 0 ? (
                                     <div className="flex items-center justify-center h-full text-slate-600">
                                         <div className="text-center">
-                                            <div className="text-3xl mb-1">📟</div>
+                                            <svg className="w-12 h-12 mx-auto mb-2 text-cyan-500/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <rect x="2" y="3" width="20" height="14" rx="2" strokeWidth="1.5"/>
+                                                <path d="M8 21h8M12 17v4" strokeWidth="1.5" strokeLinecap="round"/>
+                                                <path d="M7 7h.01M7 10h.01M7 13h.01" strokeWidth="2" strokeLinecap="round"/>
+                                            </svg>
                                             <p className="text-xs">Awaiting execution...</p>
                                         </div>
                                     </div>
@@ -639,7 +655,7 @@ const App = () => {
                 </div>
             </div>
 
-            <Modal isOpen={initModalOpen} onClose={() => {}} title="Welcome to Turdus M3rula" canClose={false} footer={
+            <Modal isOpen={initModalOpen} onClose={() => {}} title="Welcome to Turdus M3rula GUI" canClose={false} footer={
                 <div className="flex gap-2 w-full justify-between">
                     <Button onClick={handleClose} variant="outline" color="red" size="sm">Exit</Button>
                     <div className="flex gap-2">
@@ -649,9 +665,18 @@ const App = () => {
                 </div>
             }>
                 <div className="text-center py-4">
-                    <div className="text-5xl mb-4">📱</div>
+                    <div className="relative w-20 h-20 mx-auto mb-4">
+                        <svg className="absolute left-0 top-2 w-10 h-14 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+                            <rect x="5" y="2" width="14" height="20" rx="2"/>
+                            <path d="M9 18h6" strokeLinecap="round"/>
+                        </svg>
+                        <svg className="absolute right-0 top-0 w-14 h-16 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+                            <rect x="3" y="2" width="18" height="20" rx="2"/>
+                            <circle cx="12" cy="19" r="0.5" fill="currentColor"/>
+                        </svg>
+                    </div>
                     <p className="text-sm text-slate-300 mb-2">Create or open a project to start</p>
-                    <p className="text-xs text-slate-500">iOS device restore and downgrade tool</p>
+                    <p className="text-xs text-slate-500">iOS/iPadOS device restore and downgrade tool</p>
                 </div>
             </Modal>
 
@@ -683,6 +708,42 @@ const App = () => {
                     <div>
                         <label className="block text-xs font-bold text-cyan-400 mb-1">Project Name</label>
                         <Input value={createName} onChange={(e) => setCreateName(e.target.value)} placeholder="Enter project name"/>
+                    </div>
+                </div>
+            </Modal>
+
+            <Modal isOpen={aboutOpen} onClose={() => setAboutOpen(false)} title="About" footer={
+                <Button onClick={() => setAboutOpen(false)} color="cyan" size="sm">Close</Button>
+            }>
+                <div className="space-y-4 text-sm">
+                    <div className="flex items-center gap-3">
+                        <img src="./logo.png" alt="Logo" className="w-12 h-12 rounded-lg shadow-lg shadow-cyan-500/30"/>
+                        <div>
+                            <h3 className="text-base font-bold text-cyan-400">Turdus M3rula GUI</h3>
+                            <p className="text-xs text-slate-400">Version 1.0.3</p>
+                        </div>
+                    </div>
+                    <div className="border-t border-cyan-500/20 pt-3">
+                        <p className="text-slate-300 leading-relaxed">GUI for turdus merula - iOS/iPadOS downgrade tool for A9-A10X devices</p>
+                    </div>
+                    <div className="space-y-2 text-xs">
+                        <div className="flex items-center gap-2">
+                            <span className="text-slate-400">Author:</span>
+                            <span className="text-cyan-300">AnInsomniacy</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-slate-400">GitHub:</span>
+                            <button
+                                onClick={() => window.api.openExternal('https://github.com/AnInsomniacy')}
+                                className="text-cyan-400 hover:text-cyan-300 transition-colors duration-200 cursor-pointer hover:underline"
+                            >
+                                github.com/AnInsomniacy
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-slate-400">Core Engine:</span>
+                            <span className="text-slate-300">turdus_merula v1.1</span>
+                        </div>
                     </div>
                 </div>
             </Modal>

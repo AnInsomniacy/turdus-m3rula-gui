@@ -1,6 +1,8 @@
 {
-  "name": "turdus-m3rula-electron",
-  "version": "1.0.0",
+  "name": "turdus-m3rula-gui",
+  "version": "1.0.3",
+  "description": "GUI for turdus merula - iOS/iPadOS downgrade tool for A9-A10X devices",
+  "author": "AnInsomniacy <https://github.com/AnInsomniacy>",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -27,7 +29,8 @@
     "wait-on": "^7.2.0"
   },
   "build": {
-    "appId": "com.example.turdusm3rula",
+    "appId": "com.aninsomniacy.turdusm3rula",
+    "productName": "Turdus M3rula GUI",
     "directories": { "buildResources": "resources" },
     "asar": true,
     "asarUnpack": [
@@ -49,11 +52,13 @@
     "icon": "resources/icon.png",
     "mac": {
       "icon": "resources/icon.png",
-      "target": ["dmg"]
+      "target": ["dmg"],
+      "category": "public.app-category.utilities"
     },
     "linux": {
       "icon": "resources/icon.png",
-      "target": ["AppImage", "deb"]
+      "target": ["AppImage", "deb"],
+      "category": "Utility"
     }
   }
 }

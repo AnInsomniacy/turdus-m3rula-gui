@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron')
 const path = require('path')
 const fs = require('fs')
 const { spawn } = require('child_process')
@@ -318,4 +318,8 @@ ipcMain.handle('window:close', async () => {
 
 ipcMain.handle('window:isMaximized', async () => {
   return win ? win.isMaximized() : false
+})
+
+ipcMain.handle('shell:openExternal', async (_, url) => {
+  await shell.openExternal(url)
 })
