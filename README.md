@@ -2,7 +2,8 @@
 
 Modern cross-platform desktop application for iOS/iPadOS device restoration and downgrade operations using the [turdus merula](https://sep.lol) toolchain. Built with Electron, React, and Tailwind CSS.
 
-<img width="1016" height="736" alt="image" src="https://github.com/user-attachments/assets/36bee7d5-baca-46c1-b7f8-229c3be7a0ca" />
+<img width="1016" height="736" alt="image" src="https://github.com/user-attachments/assets/cb84bfd9-91f9-46a3-85a2-b444c5d433c0" />
+
 
 
 ## Overview
