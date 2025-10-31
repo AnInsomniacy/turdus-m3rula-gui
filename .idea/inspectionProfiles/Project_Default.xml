@@ -1,0 +1,38 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="Eslint" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="false" level="WARNING" enabled_by_default="false">
+      <option name="ignoredPackages">
+        <list>
+          <option value="requests" />
+          <option value="matplotlib" />
+          <option value="pygame" />
+          <option value="yapf" />
+          <option value="tqdm" />
+          <option value="progressbar" />
+          <option value="pillow" />
+          <option value="lxml" />
+          <option value="psutil" />
+          <option value="shapely" />
+          <option value="filelock" />
+          <option value="Pygments" />
+          <option value="mediapy" />
+          <option value="cuda-python" />
+          <option value="PyOpenGL" />
+          <option value="PyOpenGL-accelerate" />
+          <option value="pyrr" />
+          <option value="glfw" />
+          <option value="gym" />
+          <option value="zmq" />
+          <option value="panda3d" />
+          <option value="panda3d-gltf" />
+          <option value="gymnasium" />
+          <option value="numpy" />
+          <option value="opencv-python" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="Stylelint" enabled="true" level="ERROR" enabled_by_default="true" />
+  </profile>
+</component>

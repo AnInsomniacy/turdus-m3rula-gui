@@ -46,13 +46,13 @@
         "to": "bin"
       }
     ],
-    "icon": "../logo.png",
+    "icon": "resources/icon.png",
     "mac": {
-      "icon": "../logo.png",
+      "icon": "resources/icon.png",
       "target": ["dmg"]
     },
     "linux": {
-      "icon": "../logo.png",
+      "icon": "resources/icon.png",
       "target": ["AppImage", "deb"]
     }
   }

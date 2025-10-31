@@ -181,7 +181,13 @@ const App = () => {
   const showToast = (message, type = 'info') => setToast({ show: true, message, type })
 
   useEffect(() => { window.api.onStarted(() => setRunning(true)); window.api.onExit(() => setRunning(false)) }, [])
-  useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight }, [lines])
+  useEffect(() => {
+    if (logRef.current) {
+      const el = logRef.current
+      const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50
+      if (isAtBottom) el.scrollTop = el.scrollHeight
+    }
+  }, [lines])
   useEffect(() => { window.api.windowIsMaximized().then(setIsMaximized) }, [])
 
   const handleMinimize = () => window.api.windowMinimize()
@@ -233,9 +239,9 @@ const App = () => {
     }
   }
 
-  const saveProjectConfig = async () => {
+  const saveProjectConfig = async (stepsToSave = completedSteps) => {
     if (!projectDir) return
-    const data = { ipsw, blob, gen, chip, mode: mode === 'teth' ? 'Tethered' : 'Untethered' }
+    const data = { ipsw, blob, gen, chip, mode: mode === 'teth' ? 'Tethered' : 'Untethered', completedSteps: stepsToSave }
     await window.api.saveProject(projectDir, data)
   }
 
@@ -390,6 +396,11 @@ const App = () => {
     const ns2 = [...ns]
     ns2[idx] = ok ? StepStatus.SUCCESS : StepStatus.FAILED
     setStatus(ns2)
+    if (ok) {
+      const newCompleted = [...completedSteps, idx]
+      setCompletedSteps(newCompleted)
+      await saveProjectConfig(newCompleted)
+    }
     const isLast = idx === steps.length - 1
     setConfirmCfg({
       title: ok ? 'Success' : 'Failed',
@@ -408,7 +419,7 @@ const App = () => {
   const enter = async () => { await window.api.write('\n') }
   const stop = async () => { await window.api.kill() }
 
-  useEffect(() => { if (projectDir) saveProjectConfig() }, [chip, mode])
+  useEffect(() => { if (projectDir) saveProjectConfig(completedSteps) }, [chip, mode, ipsw, blob, gen])
 
   const completed = completedSteps.length
   const pct = steps.length ? Math.floor((completed / steps.length) * 100) : 0
@@ -424,9 +435,7 @@ const App = () => {
 
       <header className="relative z-20 px-4 py-3 bg-slate-900/80 border-b border-cyan-500/20 backdrop-blur-xl flex items-center gap-4 shrink-0 transition-all duration-300" style={{ WebkitAppRegion: 'drag' }}>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-cyan-500/50 transition-all duration-300">
-            <span className="text-lg font-black">T</span>
-          </div>
+          <img src="/logo.png" alt="Logo" className="w-8 h-8 rounded-lg shadow-lg shadow-cyan-500/50 transition-all duration-300" />
           <h1 className="text-xl font-black text-cyan-400">Turdus M3rula</h1>
           <Badge color="cyan">iOS Restore</Badge>
         </div>
