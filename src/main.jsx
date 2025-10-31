@@ -349,7 +349,6 @@ const App = () => {
     }, [mode, chip, stepDefs])
 
     const [status, setStatus] = useState(steps.map(() => StepStatus.PENDING))
-    const [lastIdx, setLastIdx] = useState(-1)
 
     useEffect(() => {
         setStatus(steps.map((_, i) => completedSteps.includes(i) ? StepStatus.SUCCESS : StepStatus.PENDING))
@@ -387,7 +386,6 @@ const App = () => {
         const ns = [...status]
         ns[idx] = StepStatus.RUNNING
         setStatus(ns)
-        setLastIdx(idx)
         let ok = false
         try {
             ok = await steps[idx].run()
@@ -421,7 +419,7 @@ const App = () => {
             body: isLast ? (ok ? 'Device boot completed' : 'Re-enter DFU and retry') : 'Re-enter DFU before next',
             buttons: ok ? (isLast ? ['Close'] : ['Next', 'Close']) : ['Retry', 'Close'],
             error: !ok,
-            nextStep: ok ? nextStep : lastIdx
+            nextStep: ok ? nextStep : idx
         })
         setConfirmOpen(true)
     }
@@ -580,6 +578,7 @@ const App = () => {
                                     const isNext = i === nextIndex
                                     const isCompleted = completedSteps.includes(i)
                                     const isFailed = st === StepStatus.FAILED
+                                    const isAnyRunning = status.some(s => s === StepStatus.RUNNING)
                                     return (
                                         <div
                                             key={`${s.label}-${i}`}
@@ -595,7 +594,7 @@ const App = () => {
                                                     {i + 1}
                                                 </Badge>
                                                 <span className="flex-1 text-xs font-medium truncate">{s.label}</span>
-                                                <Button size="sm" color={isNext ? 'cyan' : 'gray'} disabled={st === StepStatus.RUNNING} onClick={() => doExecute(i)}>
+                                                <Button size="sm" color={isNext ? 'cyan' : 'gray'} disabled={isAnyRunning} onClick={() => doExecute(i)}>
                                                     {st === StepStatus.RUNNING ? <Spinner/> : '▶'}
                                                 </Button>
                                             </div>
