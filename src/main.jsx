@@ -403,6 +403,7 @@ const App = () => {
 
     const onConfirm = async (b) => {
         setConfirmOpen(false)
+        await refreshFiles()
         if (b === 'Next') {
             if (nextIndex >= 0) await doExecute(nextIndex)
         }
