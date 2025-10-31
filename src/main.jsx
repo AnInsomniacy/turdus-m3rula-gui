@@ -383,11 +383,7 @@ const App = () => {
 
     const nextIndex = useMemo(() => calculateNextIndex(), [completedSteps, steps, projectDir, ipsw, blob, gen, mode])
 
-    const doExecute = async (idx, skipCheck = false) => {
-        if (!skipCheck && !canExecuteStep(idx)) {
-            showToast('Complete previous steps first', 'warning')
-            return
-        }
+    const doExecute = async (idx) => {
         const ns = [...status]
         ns[idx] = StepStatus.RUNNING
         setStatus(ns)
@@ -435,7 +431,7 @@ const App = () => {
         setConfirmOpen(false)
         if (b === 'Next' || b === 'Retry') {
             if (targetStep >= 0) {
-                await doExecute(targetStep, true)
+                await doExecute(targetStep)
             }
         }
     }
@@ -453,7 +449,6 @@ const App = () => {
     }, [ipsw, blob, gen])
 
     const completed = completedSteps.length
-    const pct = steps.length ? Math.floor((completed / steps.length) * 100) : 0
     const allCompleted = completed === steps.length && steps.length > 0
 
     const lineCount = lines.length > 0 ? lines.join('').split('\n').length : 0
@@ -600,16 +595,13 @@ const App = () => {
                                                     {i + 1}
                                                 </Badge>
                                                 <span className="flex-1 text-xs font-medium truncate">{s.label}</span>
-                                                <Button size="sm" color={isNext ? 'cyan' : 'gray'} disabled={!canExec || st === StepStatus.SUCCESS || st === StepStatus.RUNNING} onClick={() => doExecute(i)}>
+                                                <Button size="sm" color={isNext ? 'cyan' : 'gray'} disabled={st === StepStatus.RUNNING} onClick={() => doExecute(i)}>
                                                     {st === StepStatus.RUNNING ? <Spinner/> : '▶'}
                                                 </Button>
                                             </div>
                                         </div>
                                     )
                                 })}
-                            </div>
-                            <div className="w-full bg-slate-900/50 rounded-full h-2 border border-cyan-500/20">
-                                <div className="bg-cyan-600 h-full rounded-full transition-all duration-300" style={{width: `${pct}%`}}/>
                             </div>
                         </div>
                     </div>
@@ -753,4 +745,8 @@ const App = () => {
     )
 }
 
-createRoot(document.getElementById('root')).render(<App/>)
+const container = document.getElementById('root')
+if (!container._reactRoot) {
+    container._reactRoot = createRoot(container)
+}
+container._reactRoot.render(<App/>)
