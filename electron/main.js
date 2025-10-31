@@ -80,6 +80,10 @@ ipcMain.handle('dialog:open', async (_, opts) => {
 
 ipcMain.handle('project:load', async (_, dir) => {
   try {
+    const blockDir = path.join(dir, 'block')
+    const image4Dir = path.join(dir, 'image4')
+    if (!fs.existsSync(blockDir)) fs.mkdirSync(blockDir, { recursive: true })
+    if (!fs.existsSync(image4Dir)) fs.mkdirSync(image4Dir, { recursive: true })
     const p = path.join(dir, 'project.json')
     if (!fs.existsSync(p)) return {}
     const j = JSON.parse(fs.readFileSync(p, 'utf8'))
