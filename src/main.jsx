@@ -19,7 +19,10 @@ const useLog = () => {
 }
 
 const runOne = async (name, args, cwd) => {
-    await window.api.run({name, args, cwd})
+    const result = await window.api.run({name, args, cwd})
+    if (result && result.error) {
+        return false
+    }
     return new Promise((resolve) => {
         window.api.onceExit((m) => resolve(m && m.code === 0))
     })
@@ -30,7 +33,7 @@ const App = () => {
     const [confirmOpen, setConfirmOpen] = useState(false)
     const [initModalOpen, setInitModalOpen] = useState(true)
     const [createOpen, setCreateOpen] = useState(false)
-    const [confirmCfg, setConfirmCfg] = useState({title: '', body: '', buttons: [], error: false})
+    const [confirmCfg, setConfirmCfg] = useState({title: '', body: '', buttons: [], error: false, nextStep: -1})
     const [createName, setCreateName] = useState('')
     const [createChip, setCreateChip] = useState('A9')
     const [createMode, setCreateMode] = useState('teth')
@@ -187,12 +190,6 @@ const App = () => {
         }
     }
 
-    const saveProject = async () => {
-        if (!projectDir) return
-        await saveProjectConfig()
-        showToast('Saved', 'success')
-    }
-
     const pickFile = async (setter, filters) => {
         const r = await window.api.openDialog({properties: ['openFile'], filters})
         if (!r || !r[0]) return
@@ -240,7 +237,10 @@ const App = () => {
     const runChain = async (items) => {
         for (const it of items) {
             const ok = await runOne(it.name, it.args || [], projectDir)
-            if (!ok) return false
+            if (!ok) {
+                await window.api.kill()
+                return false
+            }
         }
         return true
     }
@@ -351,9 +351,16 @@ const App = () => {
     const [lastIdx, setLastIdx] = useState(-1)
 
     useEffect(() => {
-        const newStatus = steps.map((_, i) => completedSteps.includes(i) ? StepStatus.SUCCESS : StepStatus.PENDING)
-        setStatus(newStatus)
-    }, [steps, completedSteps])
+        setStatus(steps.map((_, i) => completedSteps.includes(i) ? StepStatus.SUCCESS : StepStatus.PENDING))
+    }, [steps])
+
+    useEffect(() => {
+        setStatus(prev => prev.map((st, i) => {
+            if (completedSteps.includes(i)) return StepStatus.SUCCESS
+            if (st === StepStatus.RUNNING || st === StepStatus.FAILED) return st
+            return StepStatus.PENDING
+        }))
+    }, [completedSteps])
 
     const canExecuteStep = (idx) => {
         if (!projectDir || !ipsw) return false
@@ -365,16 +372,18 @@ const App = () => {
         return true
     }
 
-    const nextIndex = useMemo(() => {
+    const calculateNextIndex = () => {
         for (let i = 0; i < steps.length; i++) {
             if (completedSteps.includes(i)) continue
             if (canExecuteStep(i)) return i
         }
         return -1
-    }, [completedSteps, steps, projectDir, ipsw, blob, gen, mode])
+    }
 
-    const doExecute = async (idx) => {
-        if (!canExecuteStep(idx)) {
+    const nextIndex = useMemo(() => calculateNextIndex(), [completedSteps, steps, projectDir, ipsw, blob, gen, mode])
+
+    const doExecute = async (idx, skipCheck = false) => {
+        if (!skipCheck && !canExecuteStep(idx)) {
             showToast('Complete previous steps first', 'warning')
             return
         }
@@ -382,33 +391,51 @@ const App = () => {
         ns[idx] = StepStatus.RUNNING
         setStatus(ns)
         setLastIdx(idx)
-        const ok = await steps[idx].run()
+        let ok = false
+        try {
+            ok = await steps[idx].run()
+        } catch (e) {
+            console.error('Step execution error:', e)
+            ok = false
+        }
         const ns2 = [...ns]
         ns2[idx] = ok ? StepStatus.SUCCESS : StepStatus.FAILED
         setStatus(ns2)
+
+        await refreshFiles()
+        await new Promise(resolve => setTimeout(resolve, 300))
+
+        let nextStep = -1
+        const newCompleted = ok ? [...completedSteps, idx] : completedSteps
         if (ok) {
-            const newCompleted = [...completedSteps, idx]
             setCompletedSteps(newCompleted)
             await saveProjectConfig(newCompleted)
+            for (let i = 0; i < steps.length; i++) {
+                if (newCompleted.includes(i)) continue
+                if (i === 0 || newCompleted.includes(i - 1)) {
+                    nextStep = i
+                    break
+                }
+            }
         }
         const isLast = idx === steps.length - 1
         setConfirmCfg({
             title: ok ? 'Success' : 'Failed',
             body: isLast ? (ok ? 'Device boot completed' : 'Re-enter DFU and retry') : 'Re-enter DFU before next',
             buttons: ok ? (isLast ? ['Close'] : ['Next', 'Close']) : ['Retry', 'Close'],
-            error: !ok
+            error: !ok,
+            nextStep: ok ? nextStep : lastIdx
         })
         setConfirmOpen(true)
     }
 
     const onConfirm = async (b) => {
+        const targetStep = confirmCfg.nextStep
         setConfirmOpen(false)
-        await refreshFiles()
-        if (b === 'Next') {
-            if (nextIndex >= 0) await doExecute(nextIndex)
-        }
-        if (b === 'Retry') {
-            if (lastIdx >= 0) await doExecute(lastIdx)
+        if (b === 'Next' || b === 'Retry') {
+            if (targetStep >= 0) {
+                await doExecute(targetStep, true)
+            }
         }
     }
 
@@ -428,12 +455,12 @@ const App = () => {
     const pct = steps.length ? Math.floor((completed / steps.length) * 100) : 0
     const allCompleted = completed === steps.length && steps.length > 0
 
-    const chipDisplay = chip === 'A9' ? 'A9' : 'A10/A10X'
+    const chipDisplay = chip === 'A9' ? 'A9(X)' : 'A10(X)'
     const modeDisplay = mode === 'teth' ? 'Tethered' : 'Untethered'
 
     const chipOptions = [
-        {value: 'A9', label: 'A9'},
-        {value: 'A10', label: 'A10/A10X'}
+        {value: 'A9', label: 'A9(X)'},
+        {value: 'A10', label: 'A10(X)'}
     ]
 
     const modeOptions = [
@@ -453,13 +480,12 @@ const App = () => {
                 <div className="flex items-center gap-2">
                     <img src="./logo.png" alt="Logo" className="w-8 h-8 rounded-lg shadow-lg shadow-cyan-500/50"/>
                     <h1 className="text-xl font-black text-cyan-400">Turdus M3rula</h1>
-                    <Badge color="cyan">iOS Restore</Badge>
+                    <Badge color="cyan">iOS/iPadOS Downgrade</Badge>
                 </div>
                 <div className="flex-1"></div>
                 <div className="flex gap-2" style={{WebkitAppRegion: 'no-drag'}}>
                     <Button size="sm" onClick={newProject} variant="solid" color="cyan">New</Button>
                     <Button size="sm" onClick={openProject} variant="outline" color="cyan">Open</Button>
-                    <Button size="sm" onClick={saveProject} color="cyan">Save</Button>
                 </div>
                 <div className="flex gap-1 ml-2" style={{WebkitAppRegion: 'no-drag'}}>
                     <button onClick={handleMinimize} className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all duration-200">

@@ -249,6 +249,9 @@ ipcMain.handle('fs:moveTempUp', async (_, dir) => {
         }
         try { fs.rmSync(p, { recursive: true, force: true }) } catch {}
       }
+      if (!fs.existsSync(p)) {
+        fs.mkdirSync(p, { recursive: true })
+      }
     }
     moveAll('block')
     moveAll('image4')
